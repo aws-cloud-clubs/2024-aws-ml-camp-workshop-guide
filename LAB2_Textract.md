@@ -1,0 +1,1 @@
+# LAB 2 : 기존 웹앱에 Amazon Textract 추가하기
