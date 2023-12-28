@@ -159,3 +159,40 @@ App은 이러한 방식을 통해 여러분이 수정해야 할 코드를 단지
 
 전반적인 코드들을 살펴봤으니, 이제는 구현해야 할 기능들에 대한 코드를 작성할 시간입니다. <br>
 `src\AmazonML.js`를 제외한 모든 열린 파일들을 닫으셔도 좋습니다.
+
+## 4. AcadeML에 Amazon Rekognition Client 추가하기
+VS Code에서 `src\AmazonML.js` 파일을 열어주세요. <br>
+초기 파일은 많은 내용이 담겨있지 않습니다. 단지 다른 개발자가 여러분들이 추가 기능들을 구현해주길 바라며 만든 코드들만 있습니다.
+```jsx
+import { Buffer } from "buffer";
+
+export async function analyzeImageML(type, imageData) {
+  const returnData = {
+    type: "warning",
+    text: "This feature has not been implemented yet!",
+  };
+  return JSON.stringify(returnData);
+}
+
+// imageData is string with data:application/octet-stream;base64,...
+function base64ToUint8Array(base64Data) {
+  const decoded = Buffer.from(base64Data, "base64");
+  const bytes = new Uint8Array(
+    decoded.buffer,
+    decoded.byteOffset,
+    decoded.byteLength
+  );
+  return bytes;
+}
+```
+이 App은 Modular Client Architecture로 구성된 AWS SDK V3를 사용합니다. <br>
+즉, 여러분들은 전체 SDK를 설치할 필요 없이 필요한 모듈들만 설치하면 된다는 것을 의미합니다.
+
+여러분들의 App에서 AWS service에 접근할 필요가 있다면, 다음과 같은 절차를 밟으셔야 합니다.
+
+1. 필요한 서비스들의 client library가 여러분의 프로젝트에 설치되어야 합니다.
+2. 해당 클라이언트의 instance가 코드로 생성되고, AWS IAM 자격 증명 정보들이 클라이언트에 전달됩니다.
+3. 만약 IAM 자격 증명 정보들이 정상적으로 인증된다면 클라이언트가 생성됩니다.
+4. 클라이언트를 사용하기 위해선, 명령어를 통해 클라이언트에게 요청해야만 합니다.
+
+각 단계들을 차례대로 진행해 봅시다. 
