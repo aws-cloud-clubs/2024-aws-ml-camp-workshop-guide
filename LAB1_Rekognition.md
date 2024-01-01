@@ -195,4 +195,130 @@ function base64ToUint8Array(base64Data) {
 3. 만약 IAM 자격 증명 정보들이 정상적으로 인증된다면 클라이언트가 생성됩니다.
 4. 클라이언트를 사용하기 위해선, 명령어를 통해 클라이언트에게 요청해야만 합니다.
 
-각 단계들을 차례대로 진행해 봅시다. 
+각 단계들을 차례대로 진행해 봅시다.
+
+## 5. SDK 모듈 설치 & IAM 자격 증명 추가하기
+### Rekognition Client Library 설치
+이 단계는 터미널 상에서 `npm install`을 실행했을 때 자동으로 진행됩니다. (이전 단계에서 완료했습니다.) <br>
+만약 수동으로 해당 라이브러리만을 설치해야 한다면, `npm i @aws-sdk/client-rekognition`을 입력해보세요.
+
+AWS SDK for JavaScript에 대한 자세한 정보는 깃허브에서 확인할 수 있습니다. ([링크](https://github.com/aws/aws-sdk-js-v3))
+
+라이브러리가 설치되었으면, 해당 라이브러리를 `AmazonML.js` 파일에 import해야 합니다. <br>
+`import { RekognitionClient } from "@aws-sdk/client-rekognition";` 코드를 파일 상단에 작성해 주세요.
+```jsx
+import { Buffer } from "buffer";
+import { RekognitionClient } from "@aws-sdk/client-rekognition";
+
+export async function analyzeImageML(type, imageData) {
+  ...
+```
+
+### IAM 자격 증명 정보 생성하기
+클라이언트를 만들기 위해서, 여러분들은 활성화된 AWS 계정이 필요합니다.
+- 이번 행사에 참여하신 여러분들에게는 Access key와 비밀 키가 제공됩니다. (스태프에게 문의 바랍니다.)
+
+Access key와 비밀 키를 획득했다면, 이 정보들을 프로젝트에 추가해야 합니다. <br>
+이를 위해, 현재 프로젝트의 root 폴더에 `.env.local` 이라는 이름의 새 파일을 생성해 주세요. <br>
+(root 폴더는 git clone을 통해 얻은 디렉토리의 최상단 경로를 의미합니다. src를 비롯한 다른 내부 폴더 안에 존재하지 않게 주의해주세요!)
+
+주의 : **env.local 이름 앞에 .이 붙음을 유념해주세요! ('.'는 숨김 파일이라는 뜻입니다.)**
+
+`.env.local` 파일 안에는 아래 내용을 입력해주세요.
+```txt
+VITE_AWS_ACCESS_KEY_ID=your access key
+VITE_AWS_SECRET_ACCESS_KEY=your secret
+VITE_AWS_SESSION_TOKEN=your session token
+VITE_AWS_REGION=us-east-1
+```
+주의 : **이번 워크샵을 개인 계정으로 진행할 시, 추후엔 VITE_AWS_SESSION_TOKEN의 값이 만료되어 올바르게 동작하지 않음을 미리 알려드립니다.**
+
+이제 비밀 정보들을 추가할 준비가 되었습니다.
+`AmazonML.js` 파일에 `creds` 값들을 추가해주세요. 이 `const creds = {...}` 내용은 반드시 analyzeImageML 메서드보다 앞에 와야 함에 주의해주세요.
+
+```jsx
+import { Buffer } from "buffer";
+import { RekognitionClient } from "@aws-sdk/client-rekognition";
+
+const creds = {
+  region: import.meta.env.VITE_AWS_REGION,
+  credentials: {
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+    sessionToken: import.meta.env.VITE_AWS_SESSION_TOKEN, // leave out if not in hosted workshop
+  },
+};
+
+export async function analyzeImageML(type, imageData) {
+```
+`creds` 변수 내부를 보면 `.env.local`에 기재된 기밀 정보들을 변수화하여 사용하고 있음을 알 수 있습니다.
+
+현재까지 진행된 코드 전체를 정리하자면 아래와 같습니다.
+```jsx
+import { Buffer } from "buffer";
+import { RekognitionClient } from "@aws-sdk/client-rekognition";
+
+const creds = {
+  region: import.meta.env.VITE_AWS_REGION,
+  credentials: {
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+    sessionToken: import.meta.env.VITE_AWS_SESSION_TOKEN, // leave out if not in hosted workshop
+  },
+};
+
+export async function analyzeImageML(type, imageData) {
+  const returnData = {
+    type: "warning",
+    text: "This feature has not been implemented yet!",
+  };
+  return JSON.stringify(returnData);
+}
+
+// imageData is string with data:application/octet-stream;base64,...
+function base64ToUint8Array(base64Data) {
+  const decoded = Buffer.from(base64Data, "base64");
+  const bytes = new Uint8Array(
+    decoded.buffer,
+    decoded.byteOffset,
+    decoded.byteLength
+  );
+  return bytes;
+}
+```
+
+자, 이제 클라이언트를 생성하는 코드를 추가해 봅시다.
+
+## 6. Rekognition Client 초기화 및 설정 코드 추가하기
+#### Rekognition Client 코드 추가하기
+
+이제, `analyzeImageML` 메서드를 수정함으로써 Rekognition Client를 추가하는 과정을 진행해봅시다. 우선, RekognitionClient 객체를 생성해야 합니다. 생성 시 인자에 `creds` 값을 넣어줌으로써 올바른 사용자임을 알려주세요.
+또한, 예외 처리를 위해 `try ... catch` 문을 사용하고, `let rekognitionClient = null;`을 메서드 외부에 선언함으로써 객체를 저장할 변수를 만들어줍니다.
+
+위의 내용을 포함하여 수정된 `analyzeImageML`은 아래와 같습니다.
+```jsx
+let rekognitionClient = null;
+export async function analyzeImageML(type, imageData) {
+  let returnData = null;
+  try {
+    if (type == "labels") {
+      // If the client has not been initialized yet, create it
+      if (!rekognitionClient)  
+        rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
+      returnData = {
+        // This is for test purposes, it will show a message that the client was created
+        type: "info",
+        text: "Rekognition Client Created",
+      };
+    }
+  } catch (error) {
+    returnData = {
+      type: "error" /* success info warning error */,
+      text: error.message,
+    };
+  }
+  return JSON.stringify(returnData);
+}
+```
+
+** 참고 : 여러분들은 `Run Task: npm: dev`를 통해 과정들을 테스트할 수 있으며, Detect Labels 버튼을 클릭했을 시 `the client was created`라는 메세지 팝업 창이 표시되면 성공입니다.
