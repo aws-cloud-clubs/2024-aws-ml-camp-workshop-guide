@@ -9,8 +9,8 @@
 
 ### 2. 소프트웨어
 #### Node.js
-1. Node includes npm, but you can install it manually too if you want: [NPM](https://www.npmjs.com/get-npm)
-2. Verify your installation by running:
+1. 노드에는 npm이 포함되어 있지만 원하는 경우 수동으로 설치할 수도 있습니다: [NPM](https://www.npmjs.com/get-npm)
+2. 다음을 실행하여 설치를 확인하세요:
     1. `node -v` and `npm -v` 를 터미널/윈도우 콘솔에서 실행했을 때 잘 작동해야.
 #### Visual Studio Code
 다른 IDE들도 사용가능하지만 워크샵 모든 단계에서 VS Code를 기준으로 설명합니다.
