@@ -49,7 +49,8 @@ AcadeML Research Tool은 이제 우리나라 모든 대학교에 배포할 준�
 7.  명령 팔레트에서 `Run Task`를 실행해 Dependencies들을 설치합니다. 명령 팔레트를 시작하기 위해선, F1 키나 CTRL+SHIFT+P (mac은 CMD+SHIFT+P)를 눌러줍니다. 팔레트에서 `Tasks: Run Task`를 입력 후 Enter키를 눌러주세요.
     1. 명령 팔레트는 `run tasks`를 위한 도구들을 나열합니다. `npm`을 선택 후 `npm: install`을 선택해주세요.
 8.  설치가 완료되었으면, 이제 처음으로 App을 실행해 볼 시간입니다! 1) `Run Task` -> `npm` -> `npm: dev`을 선택해주세요. 2) 만약 세부 옵션을 선택하는 창이 나온다면, 가장 위의 것을 선택해주세요. 3) 이것은 VS Code 내에서 새로운 터미널 프로세스를 실행시키고, 잠시 후 터미널에선 다음과 같은 메세지가 나타날 것입니다.
-    ```bash
+
+    ````bash
     VITE v3.2.7 ready in 530 ms
 
         ➜  Local:   http://localhost:3000/
@@ -59,6 +60,8 @@ AcadeML Research Tool은 이제 우리나라 모든 대학교에 배포할 준�
     App이 실행되는 것을 보기 위해선 웹 브라우저를 실행한 후 `http://localhost:3000/`에 접속해주세요.
     페이지가 성공적으로 렌더링되었다면, 사진을 클릭해 정상적으로 동작하는지 테스트해주세요.
     다음 세션에서는 App을 사용하는 방법을 알려드리지만, 현재는 우선 App을 중단해줍시다!
+
+    ````
 
 9.  `npm dev run`을 중지하기 위해선, 터미널 우측 상단에 위치한 쓰레기통 모양의 `Kill Terminal` 아이콘을 클릭해야 합니다.
 10. Hot Reloading이 지원되기 때문에, 앱이 실행되는 동안 코드를 수정한다면 수정된 버전의 코드가 실시간으로 반영되는 것을 확인할 수 있습니다. (특정 상황에선 앱을 새로 실행해야합니다.)
@@ -363,343 +366,352 @@ const creds = {
 ```
 
 2. 명령을 위한 매개변수와 입력 데이터 설정하기 <br>
-  : 각 명령들은 다른 매개변수를 가집니다. `DetectLabels`는 uint8 형식의 이미지 데이터와 반환할 레이블의 최대 개수, 그리고 반환할 최소 confidence 수를 매개변수로 가져야 합니다. <br>
-  다행히, 기존 코드에는 이미 이미지 데이터를 uint8 형식으로 변환시켜주는 메서드가 있기 때문에 우리는 편안하게 이 메서드를 다음과 같이 사용하기만 하면 됩니다.
-  1) `data:application/octet-stream;base64` 헤더를 `imageData`에서 제거합니다. (split 문법 이용)
-  2) 나머지 `imageData` 데이터를 base64ToUint8Array 메서드의 인자로 넣어줍니다.
-  ```jsx
-    ...
-    export async function analyzeImageML(type, imageData) {
-      // uimage_bytes를 아래와 같이 작성해주세요.
-      const uimage_bytes = base64ToUint8Array(imageData.split("data:application/octet-stream;base64,")[1]);
-      let returnData = null;
-      try {
-    ...
-  ```
+   : 각 명령들은 다른 매개변수를 가집니다. `DetectLabels`는 uint8 형식의 이미지 데이터와 반환할 레이블의 최대 개수, 그리고 반환할 최소 confidence 수를 매개변수로 가져야 합니다. <br>
+   다행히, 기존 코드에는 이미 이미지 데이터를 uint8 형식으로 변환시켜주는 메서드가 있기 때문에 우리는 편안하게 이 메서드를 다음과 같이 사용하기만 하면 됩니다.
 
-  `base64ToUint8Array` 메서드 호출 후에, `params` 변수들을 선언해 주세요.
-  ```jsx
-    ...
+1) `data:application/octet-stream;base64` 헤더를 `imageData`에서 제거합니다. (split 문법 이용)
+2) 나머지 `imageData` 데이터를 base64ToUint8Array 메서드의 인자로 넣어줍니다.
+
+```jsx
+  ...
   export async function analyzeImageML(type, imageData) {
+    // uimage_bytes를 아래와 같이 작성해주세요.
     const uimage_bytes = base64ToUint8Array(imageData.split("data:application/octet-stream;base64,")[1]);
-    
-    // params 변수를 아래와 같이 작성해 주세요.
-    const params = {
-      Image: { Bytes: uimage_bytes },
-      MaxLabels: 10,
-      MinConfidence: 80,
-    };
-  let returnData = null;
-    try {
-      ...
-  ```
-
-  마지막으로, 메서드로부터 리턴될 데이터를 저장하기 위한 `returnData` 변수도 미리 초기화해주세요. try문 실행 전에 선언해주시길 다시 한 번 확인해주세요.
-  ```jsx
-    ...
-      MinConfidence: 80,
-    };
     let returnData = null;
     try {
-      ...
-  ```
-
-  3. 명령 생성 후 클라이언트에게 전송하기
-  클라이언트 초기화 코드 작성 후, 다음과 같이 코드를 추가해주세요.
-  ```jsx
   ...
+```
+
+`base64ToUint8Array` 메서드 호출 후에, `params` 변수들을 선언해 주세요.
+
+```jsx
+  ...
+export async function analyzeImageML(type, imageData) {
+  const uimage_bytes = base64ToUint8Array(imageData.split("data:application/octet-stream;base64,")[1]);
+
+  // params 변수를 아래와 같이 작성해 주세요.
+  const params = {
+    Image: { Bytes: uimage_bytes },
+    MaxLabels: 10,
+    MinConfidence: 80,
+  };
+let returnData = null;
   try {
-    if (type == "labels") {
-      // If the client has not been initialized yet, create it
-      if (!rekognitionClient)  
-        rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
-
-      // 아래 코드를 추가해주세요.
-      const query = new DetectLabelsCommand(params);
-      let response = await rekognitionClient.send(query);
-      returnData = {
-        type: "success",
-        text: response,
-      };
-    }
     ...
-  ```
+```
 
-  4. JSON Response 처리하기
-  만약 JSON response 안에 어떤 데이터가 포함되었는지 궁금하시다면, `console.log(response)`나 `console.log(JSON.stringify(response.Labels))` 코드를 추가하여 브라우저 콘솔에서 출력 결과를 확인해 보실 수 있습니다.
+마지막으로, 메서드로부터 리턴될 데이터를 저장하기 위한 `returnData` 변수도 미리 초기화해주세요. try문 실행 전에 선언해주시길 다시 한 번 확인해주세요.
 
-  아래 예시는 JSON response의 출력 예시입니다.<br>
-  임의의 안경 쓴 수염난 남자 사진을 샘플로 입력한 데이터들로, 여러분들의 코드와 구조만 유사하다는 점을 참고해주세요.
+```jsx
+  ...
+    MinConfidence: 80,
+  };
+  let returnData = null;
+  try {
+    ...
+```
 
-  `Name`과 `Confidence` 레이블들을 주목해주세요. 몇몇 레이블들은 `bounding boxes` 키도 갖고 있습니다. **왜 모든 레이블들에 위의 레이블들이 전부 있지 않을까요?**
+3. 명령 생성 후 클라이언트에게 전송하기
+   클라이언트 초기화 코드 작성 후, 다음과 같이 코드를 추가해주세요.
+
+```jsx
+...
+try {
+  if (type == "labels") {
+    // If the client has not been initialized yet, create it
+    if (!rekognitionClient)
+      rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
+
+    // 아래 코드를 추가해주세요.
+    const query = new DetectLabelsCommand(params);
+    let response = await rekognitionClient.send(query);
+    returnData = {
+      type: "success",
+      text: response,
+    };
+  }
+  ...
+```
+
+4. JSON Response 처리하기
+   만약 JSON response 안에 어떤 데이터가 포함되었는지 궁금하시다면, `console.log(response)`나 `console.log(JSON.stringify(response.Labels))` 코드를 추가하여 브라우저 콘솔에서 출력 결과를 확인해 보실 수 있습니다.
+
+아래 예시는 JSON response의 출력 예시입니다.<br>
+임의의 안경 쓴 수염난 남자 사진을 샘플로 입력한 데이터들로, 여러분들의 코드와 구조만 유사하다는 점을 참고해주세요.
+
+`Name`과 `Confidence` 레이블들을 주목해주세요. 몇몇 레이블들은 `bounding boxes` 키도 갖고 있습니다. **왜 모든 레이블들에 위의 레이블들이 전부 있지 않을까요?**
+
 ```json
 [
   {
-      "Aliases": [],
-      "Categories": [
-          {
-              "Name": "Person Description"
-          }
-      ],
-      "Confidence": 99.99993133544922,
-      "Instances": [],
-      "Name": "Beard",
-      "Parents": [
-          {
-              "Name": "Face"
-          },
-          {
-              "Name": "Head"
-          },
-          {
-              "Name": "Person"
-          }
-      ]
+    "Aliases": [],
+    "Categories": [
+      {
+        "Name": "Person Description"
+      }
+    ],
+    "Confidence": 99.99993133544922,
+    "Instances": [],
+    "Name": "Beard",
+    "Parents": [
+      {
+        "Name": "Face"
+      },
+      {
+        "Name": "Head"
+      },
+      {
+        "Name": "Person"
+      }
+    ]
   },
   {
-      "Aliases": [],
-      "Categories": [
-          {
-              "Name": "Person Description"
-          }
-      ],
-      "Confidence": 99.99993133544922,
-      "Instances": [],
-      "Name": "Face",
-      "Parents": [
-          {
-              "Name": "Head"
-          },
-          {
-              "Name": "Person"
-          }
-      ]
+    "Aliases": [],
+    "Categories": [
+      {
+        "Name": "Person Description"
+      }
+    ],
+    "Confidence": 99.99993133544922,
+    "Instances": [],
+    "Name": "Face",
+    "Parents": [
+      {
+        "Name": "Head"
+      },
+      {
+        "Name": "Person"
+      }
+    ]
   },
   {
-      "Aliases": [],
-      "Categories": [
-          {
-              "Name": "Person Description"
-          }
-      ],
-      "Confidence": 99.99993133544922,
-      "Instances": [],
-      "Name": "Head",
-      "Parents": [
-          {
-              "Name": "Person"
-          }
-      ]
+    "Aliases": [],
+    "Categories": [
+      {
+        "Name": "Person Description"
+      }
+    ],
+    "Confidence": 99.99993133544922,
+    "Instances": [],
+    "Name": "Head",
+    "Parents": [
+      {
+        "Name": "Person"
+      }
+    ]
   },
   {
-      "Aliases": [
-          {
-              "Name": "Human"
-          }
-      ],
-      "Categories": [
-          {
-              "Name": "Person Description"
-          }
-      ],
-      "Confidence": 99.99993133544922,
-      "Instances": [
-          {
-              "BoundingBox": {
-                  "Height": 0.9094523787498474,
-                  "Left": 0.042118530720472336,
-                  "Top": 0.08603755384683609,
-                  "Width": 0.9501869082450867
-              },
-              "Confidence": 99.75959777832031
-          }
-      ],
-      "Name": "Person",
-      "Parents": []
+    "Aliases": [
+      {
+        "Name": "Human"
+      }
+    ],
+    "Categories": [
+      {
+        "Name": "Person Description"
+      }
+    ],
+    "Confidence": 99.99993133544922,
+    "Instances": [
+      {
+        "BoundingBox": {
+          "Height": 0.9094523787498474,
+          "Left": 0.042118530720472336,
+          "Top": 0.08603755384683609,
+          "Width": 0.9501869082450867
+        },
+        "Confidence": 99.75959777832031
+      }
+    ],
+    "Name": "Person",
+    "Parents": []
   },
   {
-      "Aliases": [
-          {
-              "Name": "Photo"
-          }
-      ],
-      "Categories": [
-          {
-              "Name": "Hobbies and Interests"
-          }
-      ],
-      "Confidence": 99.99308776855469,
-      "Instances": [],
-      "Name": "Photography",
-      "Parents": []
+    "Aliases": [
+      {
+        "Name": "Photo"
+      }
+    ],
+    "Categories": [
+      {
+        "Name": "Hobbies and Interests"
+      }
+    ],
+    "Confidence": 99.99308776855469,
+    "Instances": [],
+    "Name": "Photography",
+    "Parents": []
   },
   {
-      "Aliases": [],
-      "Categories": [
-          {
-              "Name": "Hobbies and Interests"
-          }
-      ],
-      "Confidence": 99.99308776855469,
-      "Instances": [],
-      "Name": "Portrait",
-      "Parents": [
-          {
-              "Name": "Face"
-          },
-          {
-              "Name": "Head"
-          },
-          {
-              "Name": "Person"
-          },
-          {
-              "Name": "Photography"
-          }
-      ]
+    "Aliases": [],
+    "Categories": [
+      {
+        "Name": "Hobbies and Interests"
+      }
+    ],
+    "Confidence": 99.99308776855469,
+    "Instances": [],
+    "Name": "Portrait",
+    "Parents": [
+      {
+        "Name": "Face"
+      },
+      {
+        "Name": "Head"
+      },
+      {
+        "Name": "Person"
+      },
+      {
+        "Name": "Photography"
+      }
+    ]
   },
   {
-      "Aliases": [],
-      "Categories": [
-          {
-              "Name": "Apparel and Accessories"
-          }
-      ],
-      "Confidence": 99.90400695800781,
-      "Instances": [
-          {
-              "BoundingBox": {
-                  "Height": 0.1899649053812027,
-                  "Left": 0.31010735034942627,
-                  "Top": 0.2991120219230652,
-                  "Width": 0.41071054339408875
-              },
-              "Confidence": 99.12773132324219
-          }
-      ],
-      "Name": "Glasses",
-      "Parents": [
-          {
-              "Name": "Accessories"
-          }
-      ]
+    "Aliases": [],
+    "Categories": [
+      {
+        "Name": "Apparel and Accessories"
+      }
+    ],
+    "Confidence": 99.90400695800781,
+    "Instances": [
+      {
+        "BoundingBox": {
+          "Height": 0.1899649053812027,
+          "Left": 0.31010735034942627,
+          "Top": 0.2991120219230652,
+          "Width": 0.41071054339408875
+        },
+        "Confidence": 99.12773132324219
+      }
+    ],
+    "Name": "Glasses",
+    "Parents": [
+      {
+        "Name": "Accessories"
+      }
+    ]
   },
   {
-      "Aliases": [],
-      "Categories": [
-          {
-              "Name": "Person Description"
-          }
-      ],
-      "Confidence": 99.75959777832031,
-      "Instances": [
-          {
-              "BoundingBox": {
-                  "Height": 0.9094523787498474,
-                  "Left": 0.042118530720472336,
-                  "Top": 0.08603755384683609,
-                  "Width": 0.9501869082450867
-              },
-              "Confidence": 99.75959777832031
-          }
-      ],
-      "Name": "Adult",
-      "Parents": [
-          {
-              "Name": "Person"
-          }
-      ]
+    "Aliases": [],
+    "Categories": [
+      {
+        "Name": "Person Description"
+      }
+    ],
+    "Confidence": 99.75959777832031,
+    "Instances": [
+      {
+        "BoundingBox": {
+          "Height": 0.9094523787498474,
+          "Left": 0.042118530720472336,
+          "Top": 0.08603755384683609,
+          "Width": 0.9501869082450867
+        },
+        "Confidence": 99.75959777832031
+      }
+    ],
+    "Name": "Adult",
+    "Parents": [
+      {
+        "Name": "Person"
+      }
+    ]
   },
   {
-      "Aliases": [],
-      "Categories": [
-          {
-              "Name": "Person Description"
-          }
-      ],
-      "Confidence": 99.75959777832031,
-      "Instances": [
-          {
-              "BoundingBox": {
-                  "Height": 0.9094523787498474,
-                  "Left": 0.042118530720472336,
-                  "Top": 0.08603755384683609,
-                  "Width": 0.9501869082450867
-              },
-              "Confidence": 99.75959777832031
-          }
-      ],
-      "Name": "Male",
-      "Parents": [
-          {
-              "Name": "Person"
-          }
-      ]
+    "Aliases": [],
+    "Categories": [
+      {
+        "Name": "Person Description"
+      }
+    ],
+    "Confidence": 99.75959777832031,
+    "Instances": [
+      {
+        "BoundingBox": {
+          "Height": 0.9094523787498474,
+          "Left": 0.042118530720472336,
+          "Top": 0.08603755384683609,
+          "Width": 0.9501869082450867
+        },
+        "Confidence": 99.75959777832031
+      }
+    ],
+    "Name": "Male",
+    "Parents": [
+      {
+        "Name": "Person"
+      }
+    ]
   },
   {
-      "Aliases": [],
-      "Categories": [
-          {
-              "Name": "Person Description"
-          }
-      ],
-      "Confidence": 99.75959777832031,
-      "Instances": [
-          {
-              "BoundingBox": {
-                  "Height": 0.9094523787498474,
-                  "Left": 0.042118530720472336,
-                  "Top": 0.08603755384683609,
-                  "Width": 0.9501869082450867
-              },
-              "Confidence": 99.75959777832031
-          }
-      ],
-      "Name": "Man",
-      "Parents": [
-          {
-              "Name": "Adult"
-          },
-          {
-              "Name": "Male"
-          },
-          {
-              "Name": "Person"
-          }
-      ]
+    "Aliases": [],
+    "Categories": [
+      {
+        "Name": "Person Description"
+      }
+    ],
+    "Confidence": 99.75959777832031,
+    "Instances": [
+      {
+        "BoundingBox": {
+          "Height": 0.9094523787498474,
+          "Left": 0.042118530720472336,
+          "Top": 0.08603755384683609,
+          "Width": 0.9501869082450867
+        },
+        "Confidence": 99.75959777832031
+      }
+    ],
+    "Name": "Man",
+    "Parents": [
+      {
+        "Name": "Adult"
+      },
+      {
+        "Name": "Male"
+      },
+      {
+        "Name": "Person"
+      }
+    ]
   }
 ]
-``` 
+```
 
 이제 AcadeML에서, 우리가 response로부터 필요한 유일한 작업은 이 response 데이터를 호출했던 메서드로 리턴해야 하는 것입니다.
 
 ```jsx
-  var returnData = null;
-    try {
-      if (type == "labels") {
-        // If the client has not been initalized yet, create it
-        if (!rekognitionClient)  
-          rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
-        const query = new DetectLabelsCommand(params);
-        let response = await rekognitionClient.send(query);        
-        returnData = {
-          type: "success",
-          text: response,
-        };
-      }
-    } catch (error) {
-      returnData = {
-        type: "error" /* success info warning error */,
-        text: error.message,
-      };
-    }
-    return JSON.stringify(returnData); 
+var returnData = null;
+try {
+  if (type == "labels") {
+    // If the client has not been initalized yet, create it
+    if (!rekognitionClient) rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
+    const query = new DetectLabelsCommand(params);
+    let response = await rekognitionClient.send(query);
+    returnData = {
+      type: "success",
+      text: response,
+    };
+  }
+} catch (error) {
+  returnData = {
+    type: "error" /* success info warning error */,
+    text: error.message,
+  };
+}
+return JSON.stringify(returnData);
 ```
 
 전체 `AmazonML.js`코드는 아래와 같습니다.
+
 ```jsx
 import { Buffer } from "buffer";
-import { RekognitionClient, DetectLabelsCommand } from "@aws-sdk/client-rekognition";
+import {
+  RekognitionClient,
+  DetectLabelsCommand,
+} from "@aws-sdk/client-rekognition";
 
 const creds = {
   region: import.meta.env.VITE_AWS_REGION,
@@ -712,21 +724,22 @@ const creds = {
 
 let rekognitionClient = null;
 export async function analyzeImageML(type, imageData) {
-  const uimage_bytes = base64ToUint8Array(imageData.split("data:application/octet-stream;base64,")[1]);
+  const uimage_bytes = base64ToUint8Array(
+    imageData.split("data:application/octet-stream;base64,")[1]
+  );
   const params = {
     Image: { Bytes: uimage_bytes },
     MaxLabels: 10,
     MinConfidence: 80,
   };
-  
+
   var returnData = null;
   try {
     if (type == "labels") {
       // If the client has not been initalized yet, create it
-      if (!rekognitionClient)  
-        rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
+      if (!rekognitionClient) rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
       const query = new DetectLabelsCommand(params);
-      let response = await rekognitionClient.send(query);        
+      let response = await rekognitionClient.send(query);
       returnData = {
         type: "success",
         text: response,
@@ -738,7 +751,7 @@ export async function analyzeImageML(type, imageData) {
       text: error.message,
     };
   }
-  return JSON.stringify(returnData);  
+  return JSON.stringify(returnData);
 }
 
 // imageData is string with data:application/octet-stream;base64,...
@@ -752,3 +765,15 @@ function base64ToUint8Array(base64Data) {
   return bytes;
 }
 ```
+
+## 8. DetectLabels 테스트하기
+
+축하합니다! 여러분들은 Amazon ML API를 호출하고 데이터를 얻기 위해 필요한 모든 코드를 추가했습니다.
+
+만약 여러분의 App이 이미 실행중이라면, 모든 열린 파일들을 저장한 후 (아마 `AmazonML.js`가 유일할겁니다.) `Run Task: npm: dev` 명령을 실행해주시길 바랍니다.
+
+실행한 App 브라우저에서, `Detect Label` 버튼을 누르면, API 호출이 실행중인 동안 로딩 화면이 표시되어야 합니다.
+
+로딩이 완료되면, label들과 그에 맞는 confidence 값이 포함된 `Labels` 표를 표시할 겁니다. 여러분들만의 자체 이미지로도 테스트 해보세요. 어떤 label들이 리턴되나요?
+
+다음 lab에서, 또 하나의 클라이언트와 명령을 추가해보겠습니다.
