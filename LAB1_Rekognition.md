@@ -348,7 +348,7 @@ export async function analyzeImageML(type, imageData) {
 
 Rekognition Client가 실제로 유용하게 쓰이기 위해선, 여러분들은 이 클라이언트에 명령을 내려야 합니다.<br>
 
-1. 클라이언트를 만들어 내는 명령 import <br>
+1. 클라이언트를 만들어 내는 명령 import하기 <br>
    : 다음과 같이 library 메서드들을 추가해주세요.
 
 ```jsx
@@ -362,4 +362,393 @@ const creds = {
 
 ```
 
-2.
+2. 명령을 위한 매개변수와 입력 데이터 설정하기 <br>
+  : 각 명령들은 다른 매개변수를 가집니다. `DetectLabels`는 uint8 형식의 이미지 데이터와 반환할 레이블의 최대 개수, 그리고 반환할 최소 confidence 수를 매개변수로 가져야 합니다. <br>
+  다행히, 기존 코드에는 이미 이미지 데이터를 uint8 형식으로 변환시켜주는 메서드가 있기 때문에 우리는 편안하게 이 메서드를 다음과 같이 사용하기만 하면 됩니다.
+  1) `data:application/octet-stream;base64` 헤더를 `imageData`에서 제거합니다. (split 문법 이용)
+  2) 나머지 `imageData` 데이터를 base64ToUint8Array 메서드의 인자로 넣어줍니다.
+  ```jsx
+    ...
+    export async function analyzeImageML(type, imageData) {
+      // uimage_bytes를 아래와 같이 작성해주세요.
+      const uimage_bytes = base64ToUint8Array(imageData.split("data:application/octet-stream;base64,")[1]);
+      let returnData = null;
+      try {
+    ...
+  ```
+
+  `base64ToUint8Array` 메서드 호출 후에, `params` 변수들을 선언해 주세요.
+  ```jsx
+    ...
+  export async function analyzeImageML(type, imageData) {
+    const uimage_bytes = base64ToUint8Array(imageData.split("data:application/octet-stream;base64,")[1]);
+    
+    // params 변수를 아래와 같이 작성해 주세요.
+    const params = {
+      Image: { Bytes: uimage_bytes },
+      MaxLabels: 10,
+      MinConfidence: 80,
+    };
+  let returnData = null;
+    try {
+      ...
+  ```
+
+  마지막으로, 메서드로부터 리턴될 데이터를 저장하기 위한 `returnData` 변수도 미리 초기화해주세요. try문 실행 전에 선언해주시길 다시 한 번 확인해주세요.
+  ```jsx
+    ...
+      MinConfidence: 80,
+    };
+    let returnData = null;
+    try {
+      ...
+  ```
+
+  3. 명령 생성 후 클라이언트에게 전송하기
+  클라이언트 초기화 코드 작성 후, 다음과 같이 코드를 추가해주세요.
+  ```jsx
+  ...
+  try {
+    if (type == "labels") {
+      // If the client has not been initialized yet, create it
+      if (!rekognitionClient)  
+        rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
+
+      // 아래 코드를 추가해주세요.
+      const query = new DetectLabelsCommand(params);
+      let response = await rekognitionClient.send(query);
+      returnData = {
+        type: "success",
+        text: response,
+      };
+    }
+    ...
+  ```
+
+  4. JSON Response 처리하기
+  만약 JSON response 안에 어떤 데이터가 포함되었는지 궁금하시다면, `console.log(response)`나 `console.log(JSON.stringify(response.Labels))` 코드를 추가하여 브라우저 콘솔에서 출력 결과를 확인해 보실 수 있습니다.
+
+  아래 예시는 JSON response의 출력 예시입니다.<br>
+  임의의 안경 쓴 수염난 남자 사진을 샘플로 입력한 데이터들로, 여러분들의 코드와 구조만 유사하다는 점을 참고해주세요.
+
+  `Name`과 `Confidence` 레이블들을 주목해주세요. 몇몇 레이블들은 `bounding boxes` 키도 갖고 있습니다. **왜 모든 레이블들에 위의 레이블들이 전부 있지 않을까요?**
+```json
+[
+  {
+      "Aliases": [],
+      "Categories": [
+          {
+              "Name": "Person Description"
+          }
+      ],
+      "Confidence": 99.99993133544922,
+      "Instances": [],
+      "Name": "Beard",
+      "Parents": [
+          {
+              "Name": "Face"
+          },
+          {
+              "Name": "Head"
+          },
+          {
+              "Name": "Person"
+          }
+      ]
+  },
+  {
+      "Aliases": [],
+      "Categories": [
+          {
+              "Name": "Person Description"
+          }
+      ],
+      "Confidence": 99.99993133544922,
+      "Instances": [],
+      "Name": "Face",
+      "Parents": [
+          {
+              "Name": "Head"
+          },
+          {
+              "Name": "Person"
+          }
+      ]
+  },
+  {
+      "Aliases": [],
+      "Categories": [
+          {
+              "Name": "Person Description"
+          }
+      ],
+      "Confidence": 99.99993133544922,
+      "Instances": [],
+      "Name": "Head",
+      "Parents": [
+          {
+              "Name": "Person"
+          }
+      ]
+  },
+  {
+      "Aliases": [
+          {
+              "Name": "Human"
+          }
+      ],
+      "Categories": [
+          {
+              "Name": "Person Description"
+          }
+      ],
+      "Confidence": 99.99993133544922,
+      "Instances": [
+          {
+              "BoundingBox": {
+                  "Height": 0.9094523787498474,
+                  "Left": 0.042118530720472336,
+                  "Top": 0.08603755384683609,
+                  "Width": 0.9501869082450867
+              },
+              "Confidence": 99.75959777832031
+          }
+      ],
+      "Name": "Person",
+      "Parents": []
+  },
+  {
+      "Aliases": [
+          {
+              "Name": "Photo"
+          }
+      ],
+      "Categories": [
+          {
+              "Name": "Hobbies and Interests"
+          }
+      ],
+      "Confidence": 99.99308776855469,
+      "Instances": [],
+      "Name": "Photography",
+      "Parents": []
+  },
+  {
+      "Aliases": [],
+      "Categories": [
+          {
+              "Name": "Hobbies and Interests"
+          }
+      ],
+      "Confidence": 99.99308776855469,
+      "Instances": [],
+      "Name": "Portrait",
+      "Parents": [
+          {
+              "Name": "Face"
+          },
+          {
+              "Name": "Head"
+          },
+          {
+              "Name": "Person"
+          },
+          {
+              "Name": "Photography"
+          }
+      ]
+  },
+  {
+      "Aliases": [],
+      "Categories": [
+          {
+              "Name": "Apparel and Accessories"
+          }
+      ],
+      "Confidence": 99.90400695800781,
+      "Instances": [
+          {
+              "BoundingBox": {
+                  "Height": 0.1899649053812027,
+                  "Left": 0.31010735034942627,
+                  "Top": 0.2991120219230652,
+                  "Width": 0.41071054339408875
+              },
+              "Confidence": 99.12773132324219
+          }
+      ],
+      "Name": "Glasses",
+      "Parents": [
+          {
+              "Name": "Accessories"
+          }
+      ]
+  },
+  {
+      "Aliases": [],
+      "Categories": [
+          {
+              "Name": "Person Description"
+          }
+      ],
+      "Confidence": 99.75959777832031,
+      "Instances": [
+          {
+              "BoundingBox": {
+                  "Height": 0.9094523787498474,
+                  "Left": 0.042118530720472336,
+                  "Top": 0.08603755384683609,
+                  "Width": 0.9501869082450867
+              },
+              "Confidence": 99.75959777832031
+          }
+      ],
+      "Name": "Adult",
+      "Parents": [
+          {
+              "Name": "Person"
+          }
+      ]
+  },
+  {
+      "Aliases": [],
+      "Categories": [
+          {
+              "Name": "Person Description"
+          }
+      ],
+      "Confidence": 99.75959777832031,
+      "Instances": [
+          {
+              "BoundingBox": {
+                  "Height": 0.9094523787498474,
+                  "Left": 0.042118530720472336,
+                  "Top": 0.08603755384683609,
+                  "Width": 0.9501869082450867
+              },
+              "Confidence": 99.75959777832031
+          }
+      ],
+      "Name": "Male",
+      "Parents": [
+          {
+              "Name": "Person"
+          }
+      ]
+  },
+  {
+      "Aliases": [],
+      "Categories": [
+          {
+              "Name": "Person Description"
+          }
+      ],
+      "Confidence": 99.75959777832031,
+      "Instances": [
+          {
+              "BoundingBox": {
+                  "Height": 0.9094523787498474,
+                  "Left": 0.042118530720472336,
+                  "Top": 0.08603755384683609,
+                  "Width": 0.9501869082450867
+              },
+              "Confidence": 99.75959777832031
+          }
+      ],
+      "Name": "Man",
+      "Parents": [
+          {
+              "Name": "Adult"
+          },
+          {
+              "Name": "Male"
+          },
+          {
+              "Name": "Person"
+          }
+      ]
+  }
+]
+``` 
+
+이제 AcadeML에서, 우리가 response로부터 필요한 유일한 작업은 이 response 데이터를 호출했던 메서드로 리턴해야 하는 것입니다.
+
+```jsx
+  var returnData = null;
+    try {
+      if (type == "labels") {
+        // If the client has not been initalized yet, create it
+        if (!rekognitionClient)  
+          rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
+        const query = new DetectLabelsCommand(params);
+        let response = await rekognitionClient.send(query);        
+        returnData = {
+          type: "success",
+          text: response,
+        };
+      }
+    } catch (error) {
+      returnData = {
+        type: "error" /* success info warning error */,
+        text: error.message,
+      };
+    }
+    return JSON.stringify(returnData); 
+```
+
+전체 `AmazonML.js`코드는 아래와 같습니다.
+```jsx
+import { Buffer } from "buffer";
+import { RekognitionClient, DetectLabelsCommand } from "@aws-sdk/client-rekognition";
+
+const creds = {
+  region: import.meta.env.VITE_AWS_REGION,
+  credentials: {
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+    sessionToken: import.meta.env.VITE_AWS_SESSION_TOKEN, // leave out if not in hosted workshop
+  },
+};
+
+let rekognitionClient = null;
+export async function analyzeImageML(type, imageData) {
+  const uimage_bytes = base64ToUint8Array(imageData.split("data:application/octet-stream;base64,")[1]);
+  const params = {
+    Image: { Bytes: uimage_bytes },
+    MaxLabels: 10,
+    MinConfidence: 80,
+  };
+  
+  var returnData = null;
+  try {
+    if (type == "labels") {
+      // If the client has not been initalized yet, create it
+      if (!rekognitionClient)  
+        rekognitionClient = new RekognitionClient(creds); // pass in the creds as parameter
+      const query = new DetectLabelsCommand(params);
+      let response = await rekognitionClient.send(query);        
+      returnData = {
+        type: "success",
+        text: response,
+      };
+    }
+  } catch (error) {
+    returnData = {
+      type: "error" /* success info warning error */,
+      text: error.message,
+    };
+  }
+  return JSON.stringify(returnData);  
+}
+
+// imageData is string with data:application/octet-stream;base64,...
+function base64ToUint8Array(base64Data) {
+  const decoded = Buffer.from(base64Data, "base64");
+  const bytes = new Uint8Array(
+    decoded.buffer,
+    decoded.byteOffset,
+    decoded.byteLength
+  );
+  return bytes;
+}
+```
