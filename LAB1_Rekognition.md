@@ -108,32 +108,32 @@ README.md
 jsconfig.json
 LICENSE
 vite.config.js
-src\plugins\index.js
-src\plugins\vuetify.js
-src\plugins\webfontloader.js
+src/plugins/index.js
+src/plugins/vuetify.js
+src/plugins/webfontloader.js
 ```
 
 - `index.html` : 앱의 Index Page (앱에서 최초로 실행되는 페이지)
-- `public\assets\` : 샘플 이미지 파일들
+- `public/assets/` : 샘플 이미지 파일들
   - 만약 여러분들이 원하신다면, 이 샘플 이미지 파일들을 여러분들이 원하시는 사진들로 교체하셔도 무방합니다.
   - 하지만 적어도 한 장 이상의 이미지가 반드시 존재해야 합니다. 그리고 반드시 5MB 이내의 JPG, PNG 이미지여야 합니다.
-- `public\assets\images.json` : App 페이지에 불러와지는 샘플 이미지들을 기재한 JSON 파일입니다. 만약 여러분들이 원하시는 사진들로 교체하셨다면, `images.json` 내의 "files" 내용들도 각 이미지들의 이름으로 교체해야 합니다.
-- `src\main.js`, `src\App.vue`, `src\components\` : Vue3 파일들입니다. UI를 비롯하여 App의 상호작용 기능들을 담당하는 코드들이 포함되어 있습니다.
+- `public/assets/images.json` : App 페이지에 불러와지는 샘플 이미지들을 기재한 JSON 파일입니다. 만약 여러분들이 원하시는 사진들로 교체하셨다면, `images.json` 내의 "files" 내용들도 각 이미지들의 이름으로 교체해야 합니다.
+- `src/main.js`, `src/App.vue`, `src/components/` : Vue3 파일들입니다. UI를 비롯하여 App의 상호작용 기능들을 담당하는 코드들이 포함되어 있습니다.
   ```
-  src\main.js
-  src\App.vue
-  src\components\AddLocalImages.vue
-  src\components\AppFooter.vue
-  src\components\AppHeader.vue
-  src\components\ImageAnalysis.vue
-  src\components\ImageList.vue
-  src\components\Instructions.vue
+  src/main.js
+  src/App.vue
+  src/components/AddLocalImages.vue
+  src/components/AppFooter.vue
+  src/components/AppHeader.vue
+  src/components/ImageAnalysis.vue
+  src/components/ImageList.vue
+  src/components/Instructions.vue
   ```
 
 위 파일들은 `Vuetify` 컴포넌트들을 포함하고 있고, `Options` 대신 `Composition API`를 사용하고 있습니다.
 즉, 코드를 살펴보면 `<script setup>` 블록 안에 파일 내의 모든 코드들이 포함된다는 것을 알 수 있고, UI 관련 코드는 `<template>` 블록 안에 작성된다는 것을 의미합니다. `ref`나 `reactive`에 의해 생성된 특정 변수들은 UI에서 해당 변수들로 접근할 수 있습니다.
 
-예시로 들기 가장 좋은 파일은 `src\components\ImageAnalysis.vue` 파일입니다. 이 파일의 80번째 줄 근처에서는 `v-btn` 컴포넌트가 작성되어 있습니다. (해당 파일을 열어보세요.)
+예시로 들기 가장 좋은 파일은 `src/components/ImageAnalysis.vue` 파일입니다. 이 파일의 80번째 줄 근처에서는 `v-btn` 컴포넌트가 작성되어 있습니다. (해당 파일을 열어보세요.)
 
 ```jsx
 <v-btn
@@ -163,15 +163,15 @@ App은 이러한 방식을 통해 여러분이 수정해야 할 코드를 단지
 
 아래에서 설명하는 2개의 파일들은 Vue3가 아닌 Javascript 파일들입니다.
 
-- `src\ImageState.js` : 이미지 목록과 ML 메서드들의 결과물들, 그리고 현재 선택된 이미지를 저장합니다. 오직 2개의 상태값("labels" / "text")만 공유하는데 필요하기 때문에, 굳이 Vue3 State Library를 사용하는 것 보다 이렇게 구현하는 것이 훨씬 간단했습니다.
-- `src\AmazonML.js` : 기타 코드들과 함께 **우리가 구현해야할 빈 메서드들이 포함되어 있습니다.** `base64ToUint8Array`라는 유용한 메서드도 있습니다. 이 메서드는 이미지 데이터를 Amazon ML API들이 요구하는 형식으로 포맷팅해주는 메서드지만, 아직 사용되지 않았습니다.
+- `src/ImageState.js` : 이미지 목록과 ML 메서드들의 결과물들, 그리고 현재 선택된 이미지를 저장합니다. 오직 2개의 상태값("labels" / "text")만 공유하는데 필요하기 때문에, 굳이 Vue3 State Library를 사용하는 것 보다 이렇게 구현하는 것이 훨씬 간단했습니다.
+- `src/AmazonML.js` : 기타 코드들과 함께 **우리가 구현해야할 빈 메서드들이 포함되어 있습니다.** `base64ToUint8Array`라는 유용한 메서드도 있습니다. 이 메서드는 이미지 데이터를 Amazon ML API들이 요구하는 형식으로 포맷팅해주는 메서드지만, 아직 사용되지 않았습니다.
 
 전반적인 코드들을 살펴봤으니, 이제는 구현해야 할 기능들에 대한 코드를 작성할 시간입니다. <br>
-`src\AmazonML.js`를 제외한 모든 열린 파일들을 닫으셔도 좋습니다.
+`src/AmazonML.js`를 제외한 모든 열린 파일들을 닫으셔도 좋습니다.
 
 ## 4. AcadeML에 Amazon Rekognition Client 추가하기
 
-VS Code에서 `src\AmazonML.js` 파일을 열어주세요. <br>
+VS Code에서 `src/AmazonML.js` 파일을 열어주세요. <br>
 초기 파일은 많은 내용이 담겨있지 않습니다. 단지 다른 개발자가 여러분들이 추가 기능들을 구현해주길 바라며 만든 코드들만 있습니다.
 
 ```jsx
@@ -343,7 +343,7 @@ export async function analyzeImageML(type, imageData) {
 }
 ```
 
-\*\* 참고 : 여러분들은 `Run Task: npm: dev`를 통해 과정들을 테스트할 수 있으며, Detect Labels 버튼을 클릭했을 시 `the client was created`라는 메세지 팝업 창이 표시되면 성공입니다.
+**참고 : 여러분들은 `Run Task: npm: dev`를 통해 과정들을 테스트할 수 있으며, Detect Labels 버튼을 클릭했을 시 `the client was created`라는 메세지 팝업 창이 표시되면 성공입니다.**
 
 ## 7. DetectLabels 명령 추가 및 호출하기
 
